@@ -17,6 +17,7 @@
 #define _ROBOT_CONTROL_H
 
 #include <nxtlibc/nxtlibc.h>
+#include <math.h>
 
 //The base variants of all functions drive at max speed. variants of functions with _speed just mean that you can control the speed instead of flooring it.
 //TO DO: Decide what to do with sensors
@@ -75,5 +76,6 @@ int retract_speed(int speed);
 
 int drive_custom (int left_speed, int right_speed); //Directly control the driving motors with numerical speeds. Use sparingly; this API is supposed to be higher-level so the AI shouldn't be worrying about this kind of adjustment
 int drive_double_custom (int speed, double power_factor);
+int drive_triple_custom (int speed, double power_factor);
 
 #endif

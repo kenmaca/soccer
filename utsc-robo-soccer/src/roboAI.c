@@ -513,15 +513,28 @@ void AI_main(struct RoboAI *ai, struct blob *blobs, void *state)
   //fprintf(stderr,"Just trackin'!\n");	// bot, opponent, and ball.
   track_agents(ai,blobs);		// Currently, does nothing but endlessly track
   if (ai->st.selfID) { 
-   printf("State: %d, fixer: %d\n", ai->st.state, fixer(ai));
+   //printf("State: %d, fixer: %d\n", ai->st.state, fixer(ai));
    
 
    if (ai->st.state >= 101 && ai->st.state < 200) {
-    //printf("%f, %f\n", ai->st.self->cx, ai->st.self->cy);
+    printf("%f, %f\n", ai->st.self->cx, ai->st.self->cy);
+
+    if (ai->st.state == 101 && ai->st.ballID) {
+     double place[2] = {600.0, 400.0};
+     double how[2] = {600.0 - ai->st.self->cx, 400.0 - ai->st.self->cy};
+     double norm;
+     norm = sqrt(how[0]*how[0] + how[1]*how[1]);
+     how[0] = how[0] / norm;
+     how[1] = how[1] / norm;
+     printf("1: %f, %f\n", how[0], how[1]);
+     drive_to_straight(ai, place, how);
+    } else if (ai->st.state == 102 && ai->st.ballID) {
+     all_stop();
+    }
 
 
 
-    
+    /*
     if (ai->st.state == 101 && ai->st.ballID) {
      des_angle[0] = 0;
      des_angle[1] =  sign(ai->st.ball->cy - ai->st.self->cy);
@@ -543,7 +556,8 @@ void AI_main(struct RoboAI *ai, struct blob *blobs, void *state)
     } else if (ai->st.state == 105 && ai->st.ballID) {
       drive_speed(50);
       kick();
-    } 
+    } */
+
    } else if (ai->st.state >= 201 && ai->st.state < 300) {
     if (ai->st.state == 201 && ai->st.ballID) {
      des_angle[0] = ai->st.ball->cx - ai->st.self->cx;
@@ -771,7 +785,7 @@ void drive_to(struct RoboAI *ai, double pos[], double ang[]) {
  if (fabs(fixer(ai)*ai->st.self->dx*ang[1] - fixer(ai)*ai->st.self->dy*ang[0]) > 0.2) {ai->st.state -= 1; all_stop(); return;}
  else {
   
-  int speed = 50;
+  int speed = 70;
   if (fabs(ai->st.self->cx - pos[0]) > speed || fabs(ai->st.self->cy - pos[1]) > speed) {
    drive_speed(speed);
   } else {
@@ -781,13 +795,14 @@ void drive_to(struct RoboAI *ai, double pos[], double ang[]) {
 }
 
 void drive_to_straight(struct RoboAI *ai, double pos[], double ang[]) {
+ printf("%f, %f\n", ang[0], ang[1]);
  double power_factor = fixer(ai)*ai->st.self->dx*ang[1] - fixer(ai)*ai->st.self->dy*ang[0];
  
  //printf("%f\n", fixer(ai)*ai->st.self->dx*ang[1] - fixer(ai)*ai->st.self->dy*ang[0]);
  int speed = 50;
  //if (fabs(ai->st.self->dy - pos[1] + (ai->st.self->dx-pos[0])*ang[1]/ang[0]) > 100) {
  if (fabs(ai->st.self->cx - pos[0]) > speed || fabs(ai->st.self->cy - pos[1]) > speed) {
-  drive_double_custom(speed, power_factor);
+  drive_triple_custom(speed, power_factor);
  } else {
   ai->st.state += 1; all_stop(); return;
  }

@@ -113,8 +113,30 @@ int drive_custom (int left_speed, int right_speed){
 
 
 int drive_double_custom (int speed, double power_factor){
-	double left = 1 - (power_factor > 0.05) ? 0.8 : 1;
-	double right = 1 - (power_factor < -0.05) ? 0.8 : 1;
+	double right = (power_factor > 0.05) ? 0.8 : 1;
+	double left = (power_factor < -0.05) ? 0.8 : 1;
+	if (NXT_OnFwd(OUT_B, round(speed * DIRECTION * right)) < 0){
+		fprintf(stderr, "_set_output_state Failed\n");
+		return -1;
+	}
+	if (NXT_OnFwd(OUT_C, round(speed * DIRECTION * left)) < 0){
+		fprintf(stderr, "_set_output_state Failed\n");
+		return -1;
+	}
+	return 1;
+}
+
+
+int drive_triple_custom (int speed, double power_factor) {
+	double norm_factor = tanh(1.3*power_factor);
+	printf("%f\n", norm_factor);
+	double right, left;
+	if (norm_factor > 0) {
+		right = 1 - norm_factor; left = 1;
+	} else {
+		left = 1 + norm_factor; right = 1;
+	}
+
 	if (NXT_OnFwd(OUT_B, round(speed * DIRECTION * right)) < 0){
 		fprintf(stderr, "_set_output_state Failed\n");
 		return -1;
