@@ -175,15 +175,21 @@ void dirToPower(struct RoboAI *ai, double *dest);
 
 double * getDir(struct RoboAI *ai, double dest_x, double dest_y);
 
-void rotate(struct RoboAI *ai, double des[]);
+void rotate(struct RoboAI *ai, double x, double y);
 
 void drive_to(struct RoboAI *ai, double pos[], double ang[]);
+
+void drive_to_straight(struct RoboAI *ai, double x, double y);
+
+void drive_to_backwards(struct RoboAI *ai, double x, double y);
 
 int sign(double x);
 
 int fixer(struct RoboAI *ai);
 
 double mormalizer(double x, double y);
+
+void tester(struct RoboAI *ai);
 
 
 

@@ -44,8 +44,9 @@ double des_angle[2], des_pos[2];
 double prev_ori[2];
 int fixed = 0;
 double goal[2];
-double off_set = 0.3;
-int counter = 0, times = 0;                                                                                                                                                                                    
+double off_set = 0.4;
+int counter = 0, times = 0;
+double norm, ballx, bally;                                                                                                                                                                                 
 
 //struct PID pid;// = createPID(Kp, Ki, Kd, sp);
 
@@ -513,21 +514,15 @@ void AI_main(struct RoboAI *ai, struct blob *blobs, void *state)
   //fprintf(stderr,"Just trackin'!\n");	// bot, opponent, and ball.
   track_agents(ai,blobs);		// Currently, does nothing but endlessly track
   if (ai->st.selfID) { 
-   //printf("State: %d, fixer: %d\n", ai->st.state, fixer(ai));
+   printf("State: %d, fixer: %d\n", ai->st.state, fixer(ai));
    
 
    if (ai->st.state >= 101 && ai->st.state < 200) {
     printf("%f, %f\n", ai->st.self->cx, ai->st.self->cy);
 
+
     if (ai->st.state == 101 && ai->st.ballID) {
-     double place[2] = {600.0, 400.0};
-     double how[2] = {600.0 - ai->st.self->cx, 400.0 - ai->st.self->cy};
-     double norm;
-     norm = sqrt(how[0]*how[0] + how[1]*how[1]);
-     how[0] = how[0] / norm;
-     how[1] = how[1] / norm;
-     printf("1: %f, %f\n", how[0], how[1]);
-     drive_to_straight(ai, place, how);
+     drive_to_straight(ai, 600.0, 400.0);
     } else if (ai->st.state == 102 && ai->st.ballID) {
      all_stop();
     }
@@ -562,49 +557,49 @@ void AI_main(struct RoboAI *ai, struct blob *blobs, void *state)
     if (ai->st.state == 201 && ai->st.ballID) {
      des_angle[0] = ai->st.ball->cx - ai->st.self->cx;
      des_angle[1] = ai->st.ball->cy - ai->st.self->cy;
-     rotate(ai, des_angle);
+     //rotate(ai, des_angle);
     } else if (ai->st.state == 202 && ai->st.ballID) {
-     des_pos[0] = sign(ai->st.ball->cx - ai->st.self->cx);
-     des_pos[1] = 0;
-     drive_to(ai, des_pos, des_angle);
+     drive_to_straight(ai, sign(ai->st.ball->cx - ai->st.self->cx), 0);
     } else if (ai->st.state == 203 && ai->st.ballID) {
      ai->st.state = 201;
     }
+
+
    } else if (ai->st.state >= 1 && ai->st.state < 100) {
 
-     if (ai->st.state == 1 && ai->st.ballID) {
-     des_angle[0] = ai->st.ball->cx - off_set*(goal[0] - ai->st.ball->cx) - ai->st.self->cx;
-     des_angle[1] = ai->st.ball->cy - off_set*(goal[1] - ai->st.ball->cy) - ai->st.self->cy;
-     des_angle[0] = des_angle[0] / sqrt(des_angle[0]*des_angle[0] + des_angle[1]*des_angle[1]);
-     des_angle[1] = des_angle[1] / sqrt(des_angle[0]*des_angle[0] + des_angle[1]*des_angle[1]);
-     printf("%f, %f\n", des_angle[0], des_angle[1]);
-     rotate(ai, des_angle);
+
+    if (ai->st.ballID && fabs(ai->st.ball->cx - ai->st.self->cx) < 130 && fabs(ai->st.ball->cy - ai->st.self->cy) < 130) {
+     kick_speed(100);
+     printf("speed: %f\n", mormalizer(ai->st.ball->vx, ai->st.ball->vy));
+    } else if (ai->st.ballID) {
+     printf("speed: %f\n", mormalizer(ai->st.ball->vx, ai->st.ball->vy));
+     kick_speed(0);
+     //ballx = ai->st.ball->cx;
+     //bally = ai->st.ball->cy;
+    } else kick_speed(0); 
+
+
+    if (ai->st.state == 1 && ai->st.ballID) {
+     rotate(ai, ai->st.self->cx, ai->st.ball->cy);
+     //drive_to_straight(ai, ai->st.ball->cx , ai->st.ball->cy);
     } else if (ai->st.state == 2 && ai->st.ballID) {
-     des_pos[0] = ai->st.ball->cx - off_set*(goal[0] - ai->st.ball->cx);
-     des_pos[1] = ai->st.ball->cy - off_set*(goal[1] - ai->st.ball->cy);
-     printf("%f, %f\n", ai->st.self->cx - des_pos[0], ai->st.self->cy - des_pos[1]);
-     drive_to_straight(ai, des_pos, des_angle);
-    } else if (ai->st.state == 3 && ai->st.ballID) {
-     des_angle[0] = goal[0] - ai->st.ball->cx;
-     des_angle[1] = goal[1] - ai->st.ball->cy;
-     des_angle[0] = des_angle[0] / sqrt(des_angle[0]*des_angle[0] + des_angle[1]*des_angle[1]);
-     des_angle[1] = des_angle[1] / sqrt(des_angle[0]*des_angle[0] + des_angle[1]*des_angle[1]);
-     rotate(ai, des_angle);
-     counter = 0;
-     times = 1;
+     
+     if (tester(ai)) {
+      ai->st.state += 1;
+      return;
+     }
+     drive_to_straight(ai, ai->st.ball->cx , ai->st.ball->cy);
+    } else if (ai->st.state == 3) {
+     drive_to_backwards(ai, 100, goal[1]);
     } else if (ai->st.state == 4 && ai->st.ballID) {
 
-     if (times) {
-      if (counter > 10) times = 0;
-      else counter++;
-      drive_speed(30);
-      kick();
-     } else {
-      all_stop();
-      kick_speed(0);
-      ai->st.state = 1;
-     }
+     if (a->st.oppID)
      
+    } else if (ai->st.state == 5 && ai->st.ballID) {
+     drive_to_straight(ai, ai->st.ball->cx - off_set*(goal[0] - ai->st.ball->cx), ai->st.ball->cy - off_set*(goal[1] - ai->st.ball->cy));
+    } else {
+     all_stop();
+     kick_speed(0);
     }
    }
    
@@ -760,23 +755,28 @@ void dirToPower(struct RoboAI *ai, double *dest) {
  else turn_right_speed(20);
 }
 
-void rotate(struct RoboAI *ai, double des[]) {
-  //printf("%f\n", fabs(fixer(ai)*ai->st.self->dx*des[1] - fixer(ai)*ai->st.self->dy*des[0]));
- double b_angle = acos(fabs(des[0]*fixer(ai)*ai->st.self->dx + des[1]*fixer(ai)*ai->st.self->dy)/(sqrt(des[0]*des[0] + des[1]*des[1]) * sqrt(fixer(ai)*ai->st.self->dy*fixer(ai)*ai->st.self->dy + fixer(ai)*ai->st.self->dx*fixer(ai)*ai->st.self->dx)));
+void rotate(struct RoboAI *ai, double x, double y) {
+ double ang[2], norm;
+ ang[0] = x - ai->st.self->cx; ang[1] = y - ai->st.self->cy;
+ norm = sqrt(ang[0]*ang[0] + ang[1]*ang[1]);
+ ang[0] = ang[0] / norm;
+ ang[1] = ang[1] / norm;
+
+ double b_angle = acos(fabs(ang[0]*fixer(ai)*ai->st.self->dx + ang[1]*fixer(ai)*ai->st.self->dy)/(sqrt(ang[0]*ang[0] + ang[1]*ang[1]) * sqrt(fixer(ai)*ai->st.self->dy*fixer(ai)*ai->st.self->dy + fixer(ai)*ai->st.self->dx*fixer(ai)*ai->st.self->dx)));
  int sp;
  b_angle = b_angle * 180/PI;
  printf("Angle: %f\n", b_angle);
- if (b_angle < 5) {ai->st.state += 1; return;}
+ if (b_angle < 5) {ai->st.state += 1; all_stop(); return;}
 
  
 
- if (b_angle > 135) sp = 60;
- else if (b_angle > 90) sp = 50;
- else if (b_angle > 45) sp = 40;
- else if (b_angle > 30) sp = 30;
- else sp = 20;
- printf("Speed: %f\n", sp);
- if ((fixer(ai)*ai->st.self->dx*des[1] - fixer(ai)*ai->st.self->dy*des[0]) < 0) {
+ if (b_angle > 135) sp = 70;
+ else if (b_angle > 90) sp = 60;
+ else if (b_angle > 45) sp = 50;
+ else if (b_angle > 30) sp = 40;
+ else sp = 30;
+
+ if ((fixer(ai)*ai->st.self->dx*ang[1] - fixer(ai)*ai->st.self->dy*ang[0]) < 0) {
   pivot_left_speed(sp);
  } else pivot_right_speed(sp);
 }
@@ -794,12 +794,18 @@ void drive_to(struct RoboAI *ai, double pos[], double ang[]) {
  }
 }
 
-void drive_to_straight(struct RoboAI *ai, double pos[], double ang[]) {
+void drive_to_straight(struct RoboAI *ai, double x, double y) {
+ double pos[2], ang[2], norm;
+ ang[0] = x - ai->st.self->cx; ang[1] = y - ai->st.self->cy; pos[0] = x; pos[1] = y;
+ norm = sqrt(ang[0]*ang[0] + ang[1]*ang[1]);
+ ang[0] = ang[0] / norm;
+ ang[1] = ang[1] / norm;
+
  printf("%f, %f\n", ang[0], ang[1]);
  double power_factor = fixer(ai)*ai->st.self->dx*ang[1] - fixer(ai)*ai->st.self->dy*ang[0];
  
  //printf("%f\n", fixer(ai)*ai->st.self->dx*ang[1] - fixer(ai)*ai->st.self->dy*ang[0]);
- int speed = 50;
+ int speed = 100;
  //if (fabs(ai->st.self->dy - pos[1] + (ai->st.self->dx-pos[0])*ang[1]/ang[0]) > 100) {
  if (fabs(ai->st.self->cx - pos[0]) > speed || fabs(ai->st.self->cy - pos[1]) > speed) {
   drive_triple_custom(speed, power_factor);
@@ -808,6 +814,29 @@ void drive_to_straight(struct RoboAI *ai, double pos[], double ang[]) {
  }
  
 }
+
+
+void drive_to_backwards(struct RoboAI *ai, double x, double y) {
+ double pos[2], ang[2], norm;
+ ang[0] = x - ai->st.self->cx; ang[1] = y - ai->st.self->cy; pos[0] = x; pos[1] = y;
+ norm = sqrt(ang[0]*ang[0] + ang[1]*ang[1]);
+ ang[0] = ang[0] / norm;
+ ang[1] = ang[1] / norm;
+
+ printf("%f, %f\n", ang[0], ang[1]);
+ double power_factor = fixer(ai)*ai->st.self->dx*ang[1] - fixer(ai)*ai->st.self->dy*ang[0];
+ 
+ //printf("%f\n", fixer(ai)*ai->st.self->dx*ang[1] - fixer(ai)*ai->st.self->dy*ang[0]);
+ int speed = 80;
+ //if (fabs(ai->st.self->dy - pos[1] + (ai->st.self->dx-pos[0])*ang[1]/ang[0]) > 100) {
+ if (fabs(ai->st.self->cx - pos[0]) > speed || fabs(ai->st.self->cy - pos[1]) > speed) {
+  drive_quadruple_custom(speed, power_factor);
+ } else {
+  ai->st.state += 1; all_stop(); return;
+ }
+ 
+}
+
 
 int sign(double x)
 {
@@ -824,6 +853,15 @@ int fixer(struct RoboAI *ai) {
 double mormalizer(double x, double y) {
 
   return sqrt(x*x + y*y);
+}
+
+int tester(struct RoboAI *ai) {
+ if (ai->st.ballID && ai->st.selfID) {
+  double ball_speed = mormalizer(ai->st.ball->vx, ai->st.ball->vy);
+  double goal_or_not = fabs(goal[1] - ai->st.ball->cy + ((goal[0]-ai->st.ball->cx)/ai->st.ball->mx)*ai->st.ball->my );
+  if ((ball_speed > 30 && goal_or_not < 128) || (ai->st.ball->cx < ai->st.self->cx && !ai->st.side) || (ai->st.ball->cx > ai->st.self->cx && ai->st.side) ) return 1;
+  else return 0;
+ } else return 0;
 }
 
 

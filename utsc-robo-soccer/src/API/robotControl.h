@@ -33,7 +33,7 @@
 #endif
 //set DIRECTION_KICKER to -1 if kicker is reversed
 #ifndef DIRECTION_KICKER
-	#define DIRECTION_KICKER 1
+	#define DIRECTION_KICKER -1
 #endif
 //POWER_FACTOR_RIGHT/LEFT multiplies all inputs to the right/left motor by this value. Used to account for differences in motor power.
 #ifndef POWER_FACTOR_RIGHT
@@ -77,5 +77,6 @@ int retract_speed(int speed);
 int drive_custom (int left_speed, int right_speed); //Directly control the driving motors with numerical speeds. Use sparingly; this API is supposed to be higher-level so the AI shouldn't be worrying about this kind of adjustment
 int drive_double_custom (int speed, double power_factor);
 int drive_triple_custom (int speed, double power_factor);
+int drive_quadruple_custom (int speed, double power_factor);
 
 #endif
